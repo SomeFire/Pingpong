@@ -1,5 +1,7 @@
 package ru.sbt;
 
+import java.util.concurrent.*;
+
 /**
  * Created by Рябов Дмитрий on 13.09.2016.
  */
@@ -10,7 +12,9 @@ public class PingPongThread extends Thread {
 	private static boolean currentState;
 	private static final Object lock = new Object();
 
-	private PingPongThread(boolean ping) {
+	private static Executor executor = Executors.newSingleThreadExecutor();
+
+	PingPongThread(boolean ping) {
 		this.ping = ping;
 		text = ping ? "Ping!" : "Pong!";
 	}
@@ -22,7 +26,7 @@ public class PingPongThread extends Thread {
 				while (currentState != ping) {
 					aWait();
 				}
-				System.out.println(text);
+				executor.execute(() -> System.out.println(text));
 				currentState = !currentState;
 				lock.notify();
 			}
@@ -38,9 +42,7 @@ public class PingPongThread extends Thread {
 	}
 
 	public static void main(String[] args) {
-		Thread t1 = new PingPongThread(true);
-		Thread t2 = new PingPongThread(false);
-		t1.start();
-		t2.start();
+		new PingPongThread(true).start();
+		new PingPongThread(false).start();
 	}
 }
